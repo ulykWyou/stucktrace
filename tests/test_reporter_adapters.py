@@ -112,4 +112,4 @@ def test_opt_mentor_import(session):
 def test_report_save(demo, tmp_path):
     p = tmp_path / "r.md"
     generate_report("instructor", session=demo, backend="offline").save(str(p))
-    assert "stucktrace" in p.read_text()
+    assert "stucktrace" p.read_text(encoding="utf-8")

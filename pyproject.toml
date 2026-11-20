@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stucktrace"
+version = "0.1.0"
+description = "Learning-trajectory telemetry & reflection reports for Jupyter: detects where students get stuck (Moodle + OPT_Mentor + Hermes)."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "YOUR TEAM NAME" }]
+keywords = ["education", "jupyter", "jupyterhub", "telemetry", "learning-analytics", "moodle", "llm", "reflection"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Jupyter",
+    "Framework :: IPython",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Education",
+]
+# Zero required dependencies: installs on any JupyterHub without conflicts.
+dependencies = []
+
+[project.optional-dependencies]
+jupyter = ["ipython>=7.0"]
+dev = ["pytest>=7", "ipython>=7.0", "build", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/ulykWyou/stucktrace"
+Repository = "https://github.com/ulykWyou/stucktrace"
+Issues = "https://github.com/ulykWyou/stucktrace/issues"
+
+[project.scripts]
+stucktrace = "stucktrace.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

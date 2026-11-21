@@ -224,6 +224,11 @@ _HINTS = {
         "AssertionError": "a test expectation failed — compare expected vs actual on the smallest input",
         "ModuleNotFoundError": "the import name or environment is wrong",
         "ImportError": "the import name or environment is wrong",
+        "FileNotFoundError": "the path is relative to where the notebook runs — print os.getcwd() and list the folder",
+        "StopIteration": "next() ran past the end — how many items does the iterator really have?",
+        "OverflowError": "a number grew too large for float — check how fast the value grows in each step",
+        "NotImplementedError": "a placeholder is still called — find the function you were supposed to fill in",
+        "TabError": "tabs and spaces are mixed — re-indent the block with spaces only",
     },
     "ru": {
         "NameError": "имя используется до того, как оно создано — проверь написание и место первого присваивания",
@@ -240,6 +245,11 @@ _HINTS = {
         "AssertionError": "тест не прошёл — сравни ожидаемое и фактическое на самом маленьком входе",
         "ModuleNotFoundError": "неверное имя модуля или окружение",
         "ImportError": "неверное имя модуля или окружение",
+        "FileNotFoundError": "путь считается от папки, где запущен ноутбук — выведи os.getcwd() и содержимое папки",
+        "StopIteration": "next() вышел за конец — сколько элементов на самом деле в итераторе?",
+        "OverflowError": "число стало слишком большим для float — проверь, как быстро растёт значение на каждом шаге",
+        "NotImplementedError": "вызывается заглушка — найди функцию, которую нужно было дописать",
+        "TabError": "смешаны табы и пробелы — переотступи блок только пробелами",
     },
 }
 

@@ -34,7 +34,7 @@ def test_invalid_mode(demo):
 
 
 def test_unreachable_hermes_falls_back(demo):
-    client = HermesClient(api_url="http://127.0.0.1:9/v1/chat/completions", timeout=1)
+    client = HermesClient(api_url="http://127.0.0.1:9/v1/chat/completions", timeout=1, retry_delay=0)
     r = generate_report("student", session=demo, backend="auto", hermes=client)
     assert r.source == "offline" and r.warning and "Hermes" in r.warning
 
@@ -140,3 +140,59 @@ def test_identical_rerun_rendered_in_reports(session, clock):
     en = generate_report("instructor", session=session, backend="offline").markdown
     ru = generate_report("student", session=session, backend="offline", lang="ru").markdown
     assert "identical re-run" in en and "тот же код" in ru
+
+
+class _FlakyHandler(BaseHTTPRequestHandler):
+    calls = 0
+    fail_code = 500
+
+    def do_POST(self):
+        self.rfile.read(int(self.headers["Content-Length"]))
+        _FlakyHandler.calls += 1
+        if _FlakyHandler.calls == 1:
+            self.send_response(_FlakyHandler.fail_code)
+            self.end_headers()
+            return
+        data = json.dumps({"choices": [{"message": {"content": "## ok on retry"}}]}).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(data)
+
+    def log_message(self, *a):
+        pass
+
+
+def _serve_flaky(fail_code):
+    _FlakyHandler.calls, _FlakyHandler.fail_code = 0, fail_code
+    srv = HTTPServer(("127.0.0.1", 0), _FlakyHandler)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    return srv, f"http://127.0.0.1:{srv.server_port}/v1/chat/completions"
+
+
+def test_hermes_retries_after_server_error(demo):
+    srv, url = _serve_flaky(500)
+    try:
+        r = generate_report("instructor", session=demo, hermes=HermesClient(api_url=url, retry_delay=0))
+    finally:
+        srv.shutdown()
+    assert r.source == "hermes" and "ok on retry" in r.markdown and _FlakyHandler.calls == 2
+
+
+def test_hermes_does_not_retry_client_error(demo):
+    srv, url = _serve_flaky(401)
+    try:
+        r = generate_report("instructor", session=demo, hermes=HermesClient(api_url=url, retry_delay=0))
+    finally:
+        srv.shutdown()
+    assert r.source == "offline" and _FlakyHandler.calls == 1 and "401" in r.warning
+
+
+@pytest.mark.parametrize("raw,expected", [("3.5", 3.5), ("abc", 12.0), ("-1", 12.0), (None, 12.0)])
+def test_hermes_timeout_from_env(monkeypatch, raw, expected):
+    if raw is None:
+        monkeypatch.delenv("HERMES_TIMEOUT", raising=False)
+    else:
+        monkeypatch.setenv("HERMES_TIMEOUT", raw)
+    assert HermesClient().timeout == expected
+    assert HermesClient(timeout=2).timeout == 2

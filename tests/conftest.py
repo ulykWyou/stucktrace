@@ -31,5 +31,5 @@ def _reset_global():
 
 @pytest.fixture(autouse=True)
 def _no_hermes_env(monkeypatch):
-    for k in ("HERMES_API_URL", "HERMES_API_KEY", "HERMES_MODEL"):
+    for k in ("HERMES_API_URL", "HERMES_API_KEY", "HERMES_MODEL", "HERMES_TIMEOUT"):
         monkeypatch.delenv(k, raising=False)

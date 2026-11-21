@@ -10,6 +10,7 @@ import csv
 import io
 import json
 import os
+import time
 import urllib.error
 import urllib.request
 from typing import Any, Dict, List, Optional
@@ -151,15 +152,32 @@ class HermesClient:
 
     Assumes an OpenAI-compatible ``/chat/completions`` contract (the common
     way Hermes models are served). Configure via arguments or env vars
-    ``HERMES_API_URL``, ``HERMES_API_KEY``, ``HERMES_MODEL``.
+    ``HERMES_API_URL``, ``HERMES_API_KEY``, ``HERMES_MODEL``, ``HERMES_TIMEOUT``.
+
+    Network errors and 5xx answers are retried ``retries`` times (default 1)
+    before giving up; 4xx answers (bad key, bad request) are not retried.
     """
 
+    DEFAULT_TIMEOUT = 12.0
+
     def __init__(self, api_url: Optional[str] = None, api_key: Optional[str] = None,
-                 model: Optional[str] = None, timeout: float = 12.0) -> None:
+                 model: Optional[str] = None, timeout: Optional[float] = None,
+                 retries: int = 1, retry_delay: float = 1.0) -> None:
         self.api_url = api_url or os.environ.get("HERMES_API_URL")
         self.api_key = api_key or os.environ.get("HERMES_API_KEY")
         self.model = model or os.environ.get("HERMES_MODEL", "hermes")
-        self.timeout = timeout
+        self.timeout = timeout if timeout is not None else self._env_timeout()
+        self.retries = max(0, int(retries))
+        self.retry_delay = retry_delay
+
+    @classmethod
+    def _env_timeout(cls) -> float:
+        raw = os.environ.get("HERMES_TIMEOUT")
+        try:
+            value = float(raw) if raw else cls.DEFAULT_TIMEOUT
+        except ValueError:
+            return cls.DEFAULT_TIMEOUT
+        return value if value > 0 else cls.DEFAULT_TIMEOUT
 
     @property
     def available(self) -> bool:
@@ -178,12 +196,25 @@ class HermesClient:
         headers = {"Content-Type": "application/json", "User-Agent": f"stucktrace/{__version__}"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
-        req = urllib.request.Request(self.api_url, data=body, headers=headers, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                payload = json.loads(resp.read().decode("utf-8"))
-        except (urllib.error.URLError, OSError, ValueError) as exc:
-            raise HermesError(f"Hermes request failed: {exc}") from exc
+        payload = None
+        last_exc: Optional[BaseException] = None
+        for attempt in range(self.retries + 1):
+            req = urllib.request.Request(self.api_url, data=body, headers=headers, method="POST")
+            try:
+                with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                    payload = json.loads(resp.read().decode("utf-8"))
+                break
+            except urllib.error.HTTPError as exc:
+                last_exc = exc
+                if exc.code < 500:          # client error: retrying will not help
+                    break
+            except (urllib.error.URLError, OSError, ValueError) as exc:
+                last_exc = exc
+            if attempt < self.retries and self.retry_delay > 0:
+                time.sleep(self.retry_delay)
+        if payload is None:
+            tries = self.retries + 1
+            raise HermesError(f"Hermes request failed after {tries} attempt(s): {last_exc}") from last_exc
         text = _extract_text(payload)
         if not text:
             raise HermesError("Hermes returned an empty / unknown response shape")

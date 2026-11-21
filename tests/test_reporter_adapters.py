@@ -113,3 +113,21 @@ def test_report_save(demo, tmp_path):
     p = tmp_path / "r.md"
     generate_report("instructor", session=demo, backend="offline").save(str(p))
     assert "stucktrace" in p.read_text(encoding="utf-8")
+
+
+NEW_HINT_TYPES = ["FileNotFoundError", "StopIteration", "OverflowError", "NotImplementedError", "TabError"]
+
+
+@pytest.mark.parametrize("etype", NEW_HINT_TYPES)
+def test_new_hints_exist_in_both_languages(etype):
+    from stucktrace.adapters import _HINTS
+    assert _HINTS["en"][etype] and _HINTS["ru"][etype]
+
+
+def test_hint_appears_in_student_report(session, clock):
+    for t in (0, 5):
+        clock.now = 1000 + t
+        session.record_run("open('data.csv')", error_type="FileNotFoundError",
+                           error_msg="[Errno 2] No such file or directory: 'data.csv'", task="io")
+    md = generate_report("student", session=session, backend="offline").markdown
+    assert "os.getcwd()" in md

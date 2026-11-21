@@ -9,7 +9,13 @@ description = "Learning-trajectory telemetry & reflection reports for Jupyter: d
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
-authors = [{ name = "Ulykbel , Alisher, Azat, Alisher,Insar" }]
+authors = [
+    { name = "Ulykbek" },
+    { name = "Alisher" },
+    { name = "Azat" },
+    { name = "Alisher" },
+    { name = "Insar" },
+]
 keywords = ["education", "jupyter", "jupyterhub", "telemetry", "learning-analytics", "moodle", "llm", "reflection"]
 classifiers = [
     "Development Status :: 3 - Alpha",

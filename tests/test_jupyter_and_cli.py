@@ -54,3 +54,16 @@ def test_cli(tmp_path, capsys):
     assert '"session_id"' in capsys.readouterr().out
     assert main(["moodle", str(p)]) == 0
     assert "sum_evens" in capsys.readouterr().out
+
+    
+def test_reset_magic_starts_fresh_session(ip, capsys):
+    st.load_ipython_extension(ip)
+    ip.run_cell("x = 1 / 0")
+    old = st.get_session()
+    assert any(e.kind == "run" for e in old.events)
+    ip.run_line_magic("stucktrace", "reset")
+    new = st.get_session()
+    assert new is not old and new.events == []
+    assert old.session_id in capsys.readouterr().out
+    ip.run_cell("y = 2")
+    assert [e.ok for e in new.events if e.kind == "run"] == [True]

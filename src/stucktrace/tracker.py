@@ -398,7 +398,9 @@ _MAGIC_HELP = """%stucktrace usage:
   %stucktrace status                         short session summary
   %stucktrace report [student|instructor] [--offline] [--lang ru]
   %stucktrace save <path.jsonl>              save raw trajectory
+  %stucktrace reset                          start a fresh session (save first!)
   %confused <text>                           mark a confusion / panic point"""
+
 
 
 def _register_magics(ip: Any) -> None:
@@ -422,6 +424,12 @@ def _register_magics(ip: Any) -> None:
             lang = args[args.index("--lang") + 1] if "--lang" in args and args.index("--lang") + 1 < len(args) else "en"
             backend = "offline" if "--offline" in args else "auto"
             return generate_report(mode=mode, backend=backend, lang=lang)
+        elif cmd == "reset":
+            old = get_session()
+            new = start_session(jupyter=False)
+            print(f"stucktrace: new session {new.session_id} "
+                  f"(previous {old.session_id} with {len(old.events)} events discarded — "
+                  f"use %stucktrace save before reset to keep it)")
         elif cmd == "save" and args:
             ok = get_session().save(args[0])
             print(f"stucktrace: saved to {args[0]}" if ok else "stucktrace: save failed")

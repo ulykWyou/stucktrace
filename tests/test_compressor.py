@@ -111,3 +111,32 @@ def test_compress_accepts_dicts():
 def test_empty_session(session):
     ctx = compress(session)
     assert ctx.tasks == [] and ctx.totals["runs"] == 0
+
+
+def test_identical_rerun_after_failure(session, clock):
+    fail(session, clock, 0, code="print(x)")
+    fail(session, clock, 40, code="print(x)")           # same code, no edit
+    task = compress(session).tasks[0]
+    assert [s.kind for s in task.stuck_points] == ["identical_rerun"]
+    assert task.panic_score > 0
+
+
+def test_edited_rerun_is_not_identical(session, clock):
+    fail(session, clock, 0, code="print(x)")
+    fail(session, clock, 40, code="x = 1\nprint(x)")
+    assert "identical_rerun" not in {s.kind for s in compress(session).tasks[0].stuck_points}
+
+
+def test_decorator_calls_are_not_identical_reruns(session):
+    import pytest
+    from stucktrace import track
+
+    @track("avg", session=session)
+    def avg(xs):
+        return sum(xs) / len(xs)
+
+    avg([1])
+    with pytest.raises(ZeroDivisionError):
+        avg([])
+    avg([2])                                   # same source, different input
+    assert "identical_rerun" not in {s.kind for s in compress(session).tasks[0].stuck_points}

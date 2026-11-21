@@ -11,6 +11,7 @@ structured context that a human or an LLM can read in seconds:
    * ``repeated_error``   – the same signature N times in a row
    * ``long_pause``       – a long silence right after a failure
    * ``rewrite``          – a large edit right after a failure (thrashing)
+   * ``identical_rerun``  – the exact same code re-run right after a failure
    * ``confusion``        – explicit ``mark_confusion()`` marker
    The signals are combined into a ``panic_score`` in [0, 1].
 3. **Key transitions** – every failure -> success step, with the error that was
@@ -52,7 +53,7 @@ _NORMALISERS = [
 ]
 
 _WEIGHTS = {"rapid_fail_burst": 1.0, "repeated_error": 0.7, "long_pause": 0.5,
-            "rewrite": 0.5, "confusion": 0.9}
+            "rewrite": 0.5, "identical_rerun": 0.6, "confusion": 0.9}
 
 
 def error_signature(error_type: Optional[str], message: Optional[str]) -> str:
@@ -303,6 +304,13 @@ def _analyze_task(name: str, events: List[Event], t0: float, cfg: CompressorConf
             stuck.append(StuckPoint("rewrite", r.ts - t0, i + 1,
                                     f"{_pct(r.edit_ratio)} of code changed after {p.error_type}",
                                     {"pct": _pct(r.edit_ratio), "etype": p.error_type or "Error"}))
+        # Same code again after a failure = "maybe it works this time". Calls of a @track-ed
+        # function always have identical source (only the inputs differ), so they are skipped.
+        if (not p.ok and r.edit_ratio == 0 and r.code_hash is not None
+                and r.data.get("via") != "decorator"):
+            stuck.append(StuckPoint("identical_rerun", r.ts - t0, i + 1,
+                                    f"re-ran identical code after {p.error_type}",
+                                    {"etype": p.error_type or "Error"}))
     confusions = [e for e in events if e.kind == CONFUSION]
     for e in confusions:
         att = sum(1 for r in runs if r.ts <= e.ts)

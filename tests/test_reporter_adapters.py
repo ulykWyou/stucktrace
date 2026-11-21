@@ -131,3 +131,12 @@ def test_hint_appears_in_student_report(session, clock):
                            error_msg="[Errno 2] No such file or directory: 'data.csv'", task="io")
     md = generate_report("student", session=session, backend="offline").markdown
     assert "os.getcwd()" in md
+
+
+def test_identical_rerun_rendered_in_reports(session, clock):
+    for t in (0, 40):
+        clock.now = 1000 + t
+        session.record_run("print(x)", error_type="NameError", error_msg="name 'x' is not defined", task="t")
+    en = generate_report("instructor", session=session, backend="offline").markdown
+    ru = generate_report("student", session=session, backend="offline", lang="ru").markdown
+    assert "identical re-run" in en and "тот же код" in ru

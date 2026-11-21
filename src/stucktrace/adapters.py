@@ -276,6 +276,7 @@ _T = {
         "tip_repeat": "If the same error comes back, write down (or say out loud) what you *expect* that line to do.",
         "tip_rewrite": "Change one thing at a time — big rewrites after an error hide what actually fixed it.",
         "tip_pause": "If you are silent for minutes, ask for help or open the visualizer earlier.",
+        "tip_identical": "Never re-run unchanged code after an error — the same code gives the same error. Change one thing first.",
         "tip_confusion": "Turn \"{t}\" into a concrete question and try the smallest possible example.",
         "tip_viz": "Keep using step-by-step visualization — it worked for you.",
         "tip_default": "Test your code on the smallest input you can think of before the full one.",
@@ -294,10 +295,12 @@ _T = {
         "iv_viz": "Visualization shortened time-to-fix on **{task}** — recommend it for similar exercises.",
         "iv_default": "No intervention needed — the session looks healthy.",
         "signals": {"rapid_fail_burst": "rapid-fail burst", "repeated_error": "repeated error",
-                    "long_pause": "long pause", "rewrite": "rewrite after error", "confusion": "confusion marker"},
+                    "long_pause": "long pause", "rewrite": "rewrite after error",
+                    "identical_rerun": "identical re-run", "confusion": "confusion marker"},
         "viz_note": "visualizer used {n}× (helped: {h})",
         "detail": {"rapid_fail_burst": "{n} failed runs in {span}s", "repeated_error": "same {etype} {n}× in a row",
                    "long_pause": "{secs}s of silence after {etype}", "rewrite": "{pct} of the code rewritten after {etype}",
+                   "identical_rerun": "re-ran the same code after {etype}",
                    "confusion": "\"{text}\""},
         "cluster": "×{count} `{sig}` — {task}, attempts {a}–{b}, max streak {s}, {res}",
         "resolved": "resolved", "unresolved": "UNRESOLVED",
@@ -327,6 +330,7 @@ _T = {
         "tip_repeat": "Если ошибка повторяется, запиши (или проговори), что *должна* делать эта строка.",
         "tip_rewrite": "Меняй по одной вещи за раз — большие переписывания скрывают, что именно помогло.",
         "tip_pause": "Если долго молчишь — раньше проси помощи или открывай визуализатор.",
+        "tip_identical": "Не перезапускай код без изменений после ошибки — тот же код даст ту же ошибку. Сначала поменяй одну вещь.",
         "tip_confusion": "Преврати «{t}» в конкретный вопрос и попробуй самый маленький пример.",
         "tip_viz": "Продолжай пользоваться пошаговой визуализацией — она тебе помогла.",
         "tip_default": "Проверяй код на самом маленьком входе перед полным.",
@@ -345,10 +349,12 @@ _T = {
         "iv_viz": "Визуализация ускорила исправление в **{task}** — рекомендуйте её для похожих упражнений.",
         "iv_default": "Вмешательство не требуется — сессия выглядит здоровой.",
         "signals": {"rapid_fail_burst": "серия быстрых неудач", "repeated_error": "повтор ошибки",
-                    "long_pause": "долгая пауза", "rewrite": "переписывание после ошибки", "confusion": "маркер непонимания"},
+                    "long_pause": "долгая пауза", "rewrite": "переписывание после ошибки",
+                    "identical_rerun": "перезапуск без изменений", "confusion": "маркер непонимания"},
         "viz_note": "визуализатор: {n}× (помог: {h})",
         "detail": {"rapid_fail_burst": "неудачных запусков подряд: {n} за {span} с", "repeated_error": "одна и та же {etype} {n}× подряд",
                    "long_pause": "{secs} с тишины после {etype}", "rewrite": "переписано {pct} кода после {etype}",
+                   "identical_rerun": "перезапустил тот же код после {etype}",
                    "confusion": "«{text}»"},
         "cluster": "×{count} `{sig}` — {task}, попытки {a}–{b}, макс. серия {s}, {res}",
         "resolved": "исправлена", "unresolved": "НЕ ИСПРАВЛЕНА",
@@ -436,6 +442,8 @@ class LocalReportGenerator:
             tips.append(T["tip_burst"])
         if "repeated_error" in kinds:
             tips.append(T["tip_repeat"])
+        if "identical_rerun" in kinds:
+            tips.append(T["tip_identical"])
         if "rewrite" in kinds:
             tips.append(T["tip_rewrite"])
         if "long_pause" in kinds:

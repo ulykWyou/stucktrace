@@ -104,10 +104,13 @@ class Session:
         task: Optional[str] = None,
         error_type: Optional[str] = None,
         error_msg: Optional[str] = None,
+        via: Optional[str] = None,
     ) -> Optional[Event]:
         t = self._task(task)
         self._last_task = t
         ev = Event(RUN, self.clock(), task=t, ok=bool(ok))
+        if via:
+            ev.data["via"] = via
         if duration is not None:
             ev.duration = round(float(duration), 4)
         if exc is not None:
@@ -226,6 +229,7 @@ class track:
         self.code = code
         self.session = session
         self._t0 = 0.0
+        self._via: Optional[str] = None
         self._wrapped = self._wrap(fn) if fn is not None else None
         if fn is not None:
             functools.update_wrapper(self, fn)
@@ -240,7 +244,8 @@ class track:
     def __exit__(self, exc_type, exc, tb) -> bool:
         try:
             self._session().record_run(code=self.code, ok=exc is None, exc=exc,
-                                       duration=time.perf_counter() - self._t0, task=self.task)
+                                       duration=time.perf_counter() - self._t0, task=self.task,
+                                       via=self._via)
         except Exception as e:  # pragma: no cover
             log.debug("track.__exit__ failed: %r", e)
         return False  # never swallow the student's exception
@@ -260,7 +265,9 @@ class track:
 
         @functools.wraps(fn)
         def wrapper(*a: Any, **kw: Any) -> Any:
-            with track(task=task, code=src, session=owner.session):
+            t = track(task=task, code=src, session=owner.session)
+            t._via = "decorator"
+            with t:
                 return fn(*a, **kw)
         return wrapper
 

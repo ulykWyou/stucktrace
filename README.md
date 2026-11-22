@@ -274,11 +274,11 @@ Team workflow: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 | Member | Role | Main contribution |
 |---|---|---|
-| NAME 1 (@github) | Maintainer, release | Package scaffold, error hints, PyPI release |
-| NAME 2 (@github) | Tracker | `%stucktrace reset`, Jupyter hooks |
-| NAME 3 (@github) | Compressor | `identical_rerun` panic signal |
-| NAME 4 (@github) | Integrations | Hermes timeout & retry logic |
-| NAME 5 (@github) | Docs & demo | README, screenshots, changelog, contributing guide |
+| Ulykbek (@ulykWyou) | Maintainer, release | Package scaffold, error hints, PyPI release |
+| Alisher (@Alish082) | Tracker | `%stucktrace reset`, Jupyter hooks |
+| Azat (@azatanafin) | Compressor | `identical_rerun` panic signal |
+| Alisher (@hakiflow) | Integrations | Hermes timeout & retry logic |
+| Insar (@KotaroIson) | Docs & demo | README, screenshots, changelog, contributing guide |
 
 ## Status & limitations (v0.1.1)
 

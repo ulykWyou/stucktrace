@@ -98,7 +98,7 @@ Instructors can't watch 200 notebooks during a lab, and students rarely remember
 | `reporter.py` | Orchestration, fallback, spoiler guard, `Report` rendering |
 | `cli.py`, `demo.py` | `stucktrace demo / report / compress / moodle` |
 
-More detail: [`docs/architecture.md`](docs/architecture.md).
+More detail: [`docs/architecture.md`](https://github.com/ulykWyou/stucktrace/blob/main/docs/architecture.md).
 
 ## Installation & Setup
 
@@ -145,8 +145,8 @@ st.log_viz(step=4, line=7, note="i == len(xs)")          # manual visualization 
 %stucktrace reset                     # start a fresh session (save first!)
 ```
 
-![Live tracking in JupyterHub](docs/img/jupyterhub-tracking.png)
-![Student report rendered in the notebook](docs/img/student-report.png)
+![Live tracking in JupyterHub](https://raw.githubusercontent.com/ulykWyou/stucktrace/main/docs/img/jupyterhub-tracking.png)
+![Student report rendered in the notebook](https://raw.githubusercontent.com/ulykWyou/stucktrace/main/docs/img/student-report.png)
 
 ### Plain Python scripts
 
@@ -194,7 +194,7 @@ OPTMentorAdapter().import_trace(trace_json, task="sum_evens")   # Python-Tutor-s
 
 ## Example reports
 
-Output of `stucktrace demo` (offline engine). Full EN/RU versions and the exact LLM context are in [`docs/report_examples.md`](docs/report_examples.md).
+Output of `stucktrace demo` (offline engine). Full EN/RU versions and the exact LLM context are in [`docs/report_examples.md`](https://github.com/ulykWyou/stucktrace/blob/main/docs/report_examples.md).
 
 <details open><summary><b>Student Self-Reflection Report</b></summary>
 
@@ -268,7 +268,7 @@ pytest -q                      # 54 tests, incl. real IPython shell + fake Herme
 stucktrace demo
 ```
 
-Team workflow: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Team workflow: [`CONTRIBUTING.md`](https://github.com/ulykWyou/stucktrace/blob/main/CONTRIBUTING.md).
 
 ## Team
 

@@ -41,13 +41,14 @@ Instructors can't watch 200 notebooks during a lab, and students rarely remember
 **1. Trajectory Compressor** (`compressor.py`). This is the core of the package, not just a logger:
 
 - **Error-signature clustering.** Messages are normalized (identifiers, numbers, addresses stripped), so `name 'x' is not defined` and `name 'total' is not defined` count as *one* recurring misconception.
-- **Five stuck/panic signals per task:**
+- **Six stuck/panic signals per task:**
   | Signal | Default rule |
   |---|---|
   | `rapid_fail_burst` | ≥3 failed runs, each ≤25 s after the previous one (trial-and-error mode) |
   | `repeated_error` | same error signature ≥3 times in a row |
   | `long_pause` | ≥120 s of silence right after a failure |
   | `rewrite` | ≥40 % of the code changed right after a failure (thrashing) |
+  | `identical_rerun` | exactly the same code re-run right after a failure ("maybe it works this time") |
   | `confusion` | explicit `mark_confusion("I don't get the loop")` / `%confused` |
 - **Panic score** in [0, 1]: a weighted combination of the signals (`1 - exp(-Σw/2)`) mapped to low / medium / high.
 - **Key transitions.** Every failure→success step: which error was fixed, after how many failed attempts, how big the fixing edit was, and whether a visualizer step came first. This measures *whether visualization actually helped*.
@@ -115,7 +116,10 @@ Requires Python ≥ 3.8 and uses only the standard library, so it can't conflict
 export HERMES_API_URL="https://<hermes-host>/v1/chat/completions"   # OpenAI-compatible endpoint
 export HERMES_API_KEY="..."
 export HERMES_MODEL="hermes"            # optional
+export HERMES_TIMEOUT="12"              # optional, seconds per request
 ```
+
+Network errors and 5xx answers are retried once; 4xx answers (e.g. a wrong key) fall back to the offline engine immediately.
 
 If `HERMES_API_URL` is not set, reports are generated offline with no warning. If it is set but unreachable, you still get an offline report, marked with a warning.
 
@@ -138,7 +142,11 @@ st.log_viz(step=4, line=7, note="i == len(xs)")          # manual visualization 
 %stucktrace report student            # renders Markdown in the notebook
 %stucktrace report instructor --lang ru
 %stucktrace save my_session.jsonl
+%stucktrace reset                     # start a fresh session (save first!)
 ```
+
+![Live tracking in JupyterHub](docs/img/jupyterhub-tracking.png)
+![Student report rendered in the notebook](docs/img/student-report.png)
 
 ### Plain Python scripts
 
@@ -256,13 +264,23 @@ st.start_session(store_code=False, autosave="live.jsonl")              # privacy
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest -q                      # 37 tests, incl. real IPython shell + fake Hermes HTTP server
+pytest -q                      # 54 tests, incl. real IPython shell + fake Hermes HTTP server
 stucktrace demo
 ```
 
 Team workflow: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-## Status & limitations (v0.1.0)
+## Team
+
+| Member | Role | Main contribution |
+|---|---|---|
+| Ulykbek (@ulykWyou) | Maintainer, release | Package scaffold, error hints, PyPI release |
+| Alisher (@Alish082) | Tracker | `%stucktrace reset`, Jupyter hooks |
+| Azat (@azatanafin) | Compressor | `identical_rerun` panic signal |
+| Alisher (@hakiflow) | Integrations | Hermes timeout & retry logic |
+| Insar (@KotaroIson) | Docs & demo | README, screenshots, changelog, contributing guide |
+
+## Status & limitations (v0.1.1)
 
 - The Hermes client assumes an OpenAI-compatible `chat/completions` API; adapt `HermesClient.complete` if your deployment differs.
 - Moodle field names follow `mod_quiz` / LTI conventions but aren't tied to a specific Moodle web-service call yet.
